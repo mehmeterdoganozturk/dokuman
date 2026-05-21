@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="UYAP Web Doküman Editörü - Gelişmiş zengin metin düzenleme ve e-imza aracı">
+    <title>UYAP Web Doküman Editörü</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="index.css?v=fix1">
+</head>
+<body>
+    <!-- Top Bar -->
+        <header id="topbar" class="topbar">
+        <div class="topbar-left">
+            <div class="document-title-wrap">
+                <input type="text" id="documentTitle" class="document-title" value="Adsız Doküman" spellcheck="false">
+                <span class="save-status" id="saveStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Kaydedildi</span>
+                </span>
+                <div id="signedBadge" style="display:none;" class="signed-badge" role="button" tabindex="0"
+                     title="Sertifika detaylarını görmek için tıklayın"
+                     onclick="event.stopPropagation(); if(window.showCertDialog){window.showCertDialog();}else{document.getElementById('certDialog').classList.remove('hidden');}">
+                    <span class="material-icons-outlined">verified</span>
+                    <span id="signedBadgeText">E-İmzalı</span>
+                </div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <!-- Tema Dropdown -->
+            <div class="theme-toggle-wrap" style="position:relative;">
+                <button class="topbar-btn" id="btnThemeToggle" title="Tema Seç">
+                    <span class="material-icons-outlined">light_mode</span>
+                </button>
+                <div id="themeDropdown" class="theme-dropdown">
+                    <button class="theme-option-btn active" data-theme="light" title="Açık Tema">
+                        <span class="material-icons-outlined">light_mode</span>
+                        <span>Açık</span>
+                    </button>
+                    <button class="theme-option-btn" data-theme="dark" title="Koyu Tema">
+                        <span class="material-icons-outlined">nights_stay</span>
+                        <span>Koyu</span>
+                    </button>
+                    <button class="theme-option-btn" data-theme="sepia" title="Okuma Modu">
+                        <span class="material-icons-outlined">wb_incandescent</span>
+                        <span>Okuma</span>
+                    </button>
+                </div>
+            </div>
+            <button class="topbar-btn" id="btnTogglePanel" title="UDF Panelini Göster/Gizle">
+                <span class="material-icons-outlined">folder_special</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Backstage Menu Overlay -->
+    <div id="backstageMenu" class="backstage-menu" style="display:none">
+        <div class="backstage-sidebar">
+            <button class="backstage-back" id="btnBackstageClose">
+                <span class="material-icons-outlined">arrow_back</span>
+            </button>
+            <div class="backstage-nav">
+                <button class="bs-nav-item active" data-bs-page="info">
+                    <span class="material-icons-outlined">info</span>
+                    <span>Bilgi</span>
+                </button>
+                <div class="bs-nav-sep"></div>
+                <button class="bs-nav-item" id="bsNew">
+                    <span class="material-icons-outlined">note_add</span>
+                    <span>Yeni</span>
+                </button>
+                <button class="bs-nav-item" id="bsOpen">
+                    <span class="material-icons-outlined">folder_open</span>
+                    <span>Aç</span>
+                </button>
+                <button class="bs-nav-item" id="bsSave">
+                    <span class="material-icons-outlined">save</span>
+                    <span>Kaydet</span>
+                </button>
+                <button class="bs-nav-item" id="bsSaveAs">
+                    <span class="material-icons-outlined">save_as</span>
+                    <span>Farklı Kaydet</span>
+                </button>
+                <div class="bs-nav-sep"></div>
+                <button class="bs-nav-item" id="bsPrint">
+                    <span class="material-icons-outlined">print</span>
+                    <span>Yazdır</span>
+                </button>
+                <button class="bs-nav-item" id="bsExport">
+                    <span class="material-icons-outlined">file_download</span>
+                    <span>Dışa Aktar</span>
+                </button>
+                <div class="bs-nav-sep"></div>
+                <button class="bs-nav-item bs-nav-exit" id="bsExit">
+                    <span class="material-icons-outlined">logout</span>
+                    <span>Çıkış</span>
+                </button>
+            </div>
+        </div>
+        <div class="backstage-content">
+            <div class="bs-page active" id="bsPageInfo">
+                <h1 class="bs-title">Doküman Bilgisi</h1>
+                <div class="bs-info-grid">
+                    <div class="bs-info-card">
+                        <span class="material-icons-outlined">description</span>
+                        <h3>Dosya Adı</h3>
+                        <p id="bsInfoTitle">Adsız Doküman</p>
+                    </div>
+                    <div class="bs-info-card">
+                        <span class="material-icons-outlined">history</span>
+                        <h3>Son Düzenleme</h3>
+                        <p id="bsInfoTime">-</p>
+                    </div>
+                    <div class="bs-info-card">
+                        <span class="material-icons-outlined">verified_user</span>
+                        <h3>İmza Durumu</h3>
+                        <p id="bsInfoSigned">İmzalanmamış</p>
+                    </div>
+                </div>
+                <div class="bs-recent-section">
+                    <h3>Son Belgeler</h3>
+                    <div id="bsRecentList" class="bs-recent-list">
+                        <div class="bs-empty-recent">Henüz son belge yok.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ribbon Menu - Tek Panel -->
+    <div id="ribbon" class="ribbon">
+
+        <!-- Hızlı Erişim Satırı -->
+        <div class="ribbon-quickrow">
+            <button class="rq-file-btn" id="menuFileBtn" title="Dosya Menüsü">Dosya &#9662;</button>
+            <div class="rq-sep"></div>
+            <button class="rq-icon-btn" id="btnUndo" title="Geri Al (Ctrl+Z)">
+                <span class="material-icons-outlined">undo</span>
+            </button>
+            <button class="rq-icon-btn" id="btnRedo" title="İleri Al (Ctrl+Y)">
+                <span class="material-icons-outlined">redo</span>
+            </button>
+            <div class="rq-sep"></div>
+            <button class="rq-icon-btn" id="btnNewQuick" title="Yeni (Ctrl+N)" onclick="document.getElementById('actionNew')&&document.getElementById('actionNew').click()">
+                <span class="material-icons-outlined">note_add</span>
+            </button>
+            <button class="rq-icon-btn" id="btnOpenQuick" title="Aç (Ctrl+O)" onclick="document.getElementById('actionOpen')&&document.getElementById('actionOpen').click()">
+                <span class="material-icons-outlined">folder_open</span>
+            </button>
+            <button class="rq-icon-btn" id="btnSaveQuick" title="Kaydet (Ctrl+S)" onclick="document.getElementById('actionSaveHTML')&&document.getElementById('actionSaveHTML').click()">
+                <span class="material-icons-outlined">save</span>
+            </button>
+            <button class="rq-icon-btn" id="btnPrintQuick" title="Yazdır (Ctrl+P)" onclick="document.getElementById('actionPrint')&&document.getElementById('actionPrint').click()">
+                <span class="material-icons-outlined">print</span>
+            </button>
+            <button class="rq-icon-btn rq-accent" id="btnSignQuick" title="E-İmzala" onclick="document.getElementById('actionSignUDF')&&document.getElementById('actionSignUDF').click()">
+                <span class="material-icons-outlined">draw</span>
+            </button>
+        </div>
+
+        <!-- Tek Biçimlendirme Paneli (sekme adı yok) -->
+        <div class="ribbon-panel active" id="panelGiris">
+
+            <!-- Pano grubu -->
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <div class="rb-col">
+                        <button class="rb-btn rb-btn-xl" id="btnPaste" title="Yapıştır (Ctrl+V)" onclick="pasteFromClipboard()">
+                            <span class="material-icons-outlined">content_paste</span>
+                            <span class="rb-label">Yapıştır</span>
+                        </button>
+                    </div>
+                    <div class="rb-col-sm">
+                        <button class="rb-btn rb-btn-sm" id="btnCut" title="Kes (Ctrl+X)" onclick="document.execCommand('cut')">
+                            <span class="material-icons-outlined">content_cut</span>
+                            <span class="rb-label">Kes</span>
+                        </button>
+                        <button class="rb-btn rb-btn-sm" id="btnCopy" title="Kopyala (Ctrl+C)" onclick="document.execCommand('copy')">
+                            <span class="material-icons-outlined">content_copy</span>
+                            <span class="rb-label">Kopyala</span>
+                        </button>
+                        <button class="rb-btn rb-btn-sm" id="actionClearFormat" title="Biçim Kopyala">
+                            <span class="material-icons-outlined">format_paint</span>
+                            <span class="rb-label">Biçim Kopyala</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="ribbon-group-title">Pano</div>
+            </div>
+            <div class="ribbon-sep"></div>
+
+            <!-- Font grubu -->
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <div class="rb-stack">
+                        <div class="rb-selects-row">
+                            <select id="selectHeading" class="toolbar-select" title="Paragraf stili" style="width:82px">
+                                <option value="p">Gövde</option>
+                                <option value="h1">Başlık 1</option>
+                                <option value="h2">Başlık 2</option>
+                                <option value="h3">Başlık 3</option>
+                                <option value="h4">Başlık 4</option>
+                            </select>
+                            <select id="selectFont" class="toolbar-select toolbar-select-font" title="Yazı Tipi">
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Inter">Inter</option>
+                                <option value="Arial">Arial</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="Courier New">Courier New</option>
+                                <option value="Verdana">Verdana</option>
+                                <option value="Trebuchet MS">Trebuchet MS</option>
+                                <option value="Palatino Linotype">Palatino</option>
+                                <option value="Garamond">Garamond</option>
+                            </select>
+                            <select id="selectSize" class="toolbar-select toolbar-select-size" title="Yazı Boyutu">
+                                <option value="1">8</option>
+                                <option value="2">10</option>
+                                <option value="3" selected>12</option>
+                                <option value="4">14</option>
+                                <option value="5">18</option>
+                                <option value="6">24</option>
+                                <option value="7">36</option>
+                            </select>
+                        </div>
+                        <div class="rb-row">
+                            <button class="rb-btn rb-btn-sm" id="btnBold" title="Kalın (Ctrl+B)"><span class="material-icons-outlined">format_bold</span></button>
+                            <button class="rb-btn rb-btn-sm" id="btnItalic" title="İtalik (Ctrl+I)"><span class="material-icons-outlined">format_italic</span></button>
+                            <button class="rb-btn rb-btn-sm" id="btnUnderline" title="Altı Çizili (Ctrl+U)"><span class="material-icons-outlined">format_underlined</span></button>
+                            <button class="rb-btn rb-btn-sm" id="btnStrike" title="Üstü Çizili"><span class="material-icons-outlined">strikethrough_s</span></button>
+                            <div class="ribbon-sep-v"></div>
+                            <div class="color-picker-wrap">
+                                <button class="rb-btn rb-btn-sm" id="btnTextColor" title="Yazı Rengi">
+                                    <span class="material-icons-outlined">format_color_text</span>
+                                    <span class="color-indicator" id="textColorIndicator" style="background:#1a1a2e;"></span>
+                                </button>
+                                <input type="color" id="inputTextColor" class="hidden-color-input" value="#1a1a2e">
+                            </div>
+                            <div class="color-picker-wrap">
+                                <button class="rb-btn rb-btn-sm" id="btnHighlight" title="Vurgu Rengi">
+                                    <span class="material-icons-outlined">format_color_fill</span>
+                                    <span class="color-indicator" id="highlightIndicator" style="background:#ffeb3b;"></span>
+                                </button>
+                                <input type="color" id="inputHighlightColor" class="hidden-color-input" value="#ffeb3b">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ribbon-group-title">Font</div>
+            </div>
+            <div class="ribbon-sep"></div>
+
+            <!-- Paragraf grubu -->
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <div class="rb-stack">
+                        <div class="rb-row">
+                            <button class="rb-btn rb-btn-sm" id="btnBulletList" title="Madde İşaretli Liste"><span class="material-icons-outlined">format_list_bulleted</span></button>
+                            <button class="rb-btn rb-btn-sm" id="btnNumberList" title="Numaralı Liste"><span class="material-icons-outlined">format_list_numbered</span></button>
+                            <button class="rb-btn rb-btn-sm" id="btnIndent" title="Girintiyi Artır"><span class="material-icons-outlined">format_indent_increase</span></button>
+                            <button class="rb-btn rb-btn-sm" id="btnOutdent" title="Girintiyi Azalt"><span class="material-icons-outlined">format_indent_decrease</span></button>
+                        </div>
+                        <div class="rb-row">
+                            <button class="rb-btn rb-btn-sm" id="btnAlignLeft" title="Sola Hizala"><span class="material-icons-outlined">format_align_left</span></button>
+                            <button class="rb-btn rb-btn-sm" id="btnAlignCenter" title="Ortala"><span class="material-icons-outlined">format_align_center</span></button>
+                            <button class="rb-btn rb-btn-sm" id="btnAlignRight" title="Sağa Hizala"><span class="material-icons-outlined">format_align_right</span></button>
+                            <button class="rb-btn rb-btn-sm" id="btnAlignJustify" title="İki Yana Yasla"><span class="material-icons-outlined">format_align_justify</span></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="ribbon-group-title">Paragraf</div>
+            </div>
+            <div class="ribbon-sep"></div>
+
+            <!-- Tablo grubu -->
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <button class="rb-btn rb-btn-lg" id="btnInsertTableEkle" title="Tablo Ekle">
+                        <span class="material-icons-outlined">grid_on</span>
+                        <span class="rb-label">Tablo<br>Ekle</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-title">Tablo</div>
+            </div>
+            <div class="ribbon-sep"></div>
+
+            <!-- Resim grubu -->
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <button class="rb-btn rb-btn-lg" id="btnInsertImageEkle" title="Resim Ekle">
+                        <span class="material-icons-outlined">image</span>
+                        <span class="rb-label">Resim<br>Ekle</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-title">Resim</div>
+            </div>
+            <div class="ribbon-sep"></div>
+
+            <!-- Bul grubu -->
+            <div class="ribbon-group">
+                <div class="ribbon-group-btns">
+                    <button class="rb-btn rb-btn-lg" id="actionFind" title="Bul ve Değiştir (Ctrl+H)">
+                        <span class="material-icons-outlined" style="font-size:30px">manage_search</span>
+                        <span class="rb-label">Bul</span>
+                    </button>
+                </div>
+                <div class="ribbon-group-title">Arama</div>
+            </div>
+
+        </div><!-- /panelGiris -->
+
+    </div><!-- /ribbon -->
+
+    <!-- Dosya Açılır Menüsü -->
+    <div class="dropdown-menu" id="dropdownFileMenu">
+        <button class="dropdown-item" id="actionNew"><span class="material-icons-outlined">note_add</span> Yeni Doküman <kbd>Ctrl+N</kbd></button>
+        <button class="dropdown-item" id="actionOpen"><span class="material-icons-outlined">folder_open</span> Aç <kbd>Ctrl+O</kbd></button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" id="actionSaveHTML"><span class="material-icons-outlined">save</span> Kaydet <kbd>Ctrl+S</kbd></button>
+        <button class="dropdown-item" id="actionSaveUDF"><span class="material-icons-outlined">save_as</span> Farklı Kaydet</button>
+        <button class="dropdown-item" id="actionSignUDF"><span class="material-icons-outlined">draw</span> E-İmza ile İmzala</button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" id="actionPrint"><span class="material-icons-outlined">print</span> Yazdır <kbd>Ctrl+P</kbd></button>
+        <button class="dropdown-item" id="actionPrintPreview"><span class="material-icons-outlined">preview</span> Yazdırma Önizlemesi</button>
+        <div class="dropdown-divider"></div>
+        <button class="dropdown-item" id="actionExitApp"><span class="material-icons-outlined">exit_to_app</span> Çıkış</button>
+    </div>
+
+    <!-- Eski gizli dropdown menüler (JS uyumluluğu için) -->
+    <div class="dropdown-menu" id="dropdownFile" style="display:none">
+        <button class="dropdown-item" id="actionSaveJSON"><span class="material-icons-outlined">data_object</span> JSON Olarak Kaydet</button>
+        <button class="dropdown-item" id="actionSaveTXT"><span class="material-icons-outlined">text_snippet</span> Düz Metin Kaydet</button>
+        <button class="dropdown-item" id="actionSaveODT"><span class="material-icons-outlined">description</span> ODT Olarak Kaydet</button>
+        <button class="dropdown-item" id="actionSavePDF"><span class="material-icons-outlined">picture_as_pdf</span> PDF Olarak Kaydet</button>
+        <button class="dropdown-item" id="actionOpenBackup"><span class="material-icons-outlined">manage_history</span> Yedekleri Aç</button>
+        <button class="dropdown-item" id="actionBatchPrint"><span class="material-icons-outlined">dynamic_feed</span> Toplu Yazdır</button>
+        <button class="dropdown-item" id="actionBatchSign"><span class="material-icons-outlined">history_edu</span> Toplu İmzala</button>
+        <button class="dropdown-item" id="actionSend"><span class="material-icons-outlined">mail</span> Gönder</button>
+        <button class="dropdown-item" id="actionListWindows"><span class="material-icons-outlined">filter_none</span> Açık Pencereleri Listele</button>
+        <button class="dropdown-item" id="actionShowSignatures"><span class="material-icons-outlined">verified</span> İmzaları Göster</button>
+        <button class="dropdown-item" id="actionShowCerts"><span class="material-icons-outlined">card_membership</span> Sertifikalar</button>
+        <button class="dropdown-item" id="actionSignUDF2" onclick="document.getElementById('actionSignUDF')&&document.getElementById('actionSignUDF').click()"><span class="material-icons-outlined">draw</span> İmzala</button>
+        <button class="dropdown-item" id="actionUndo"><span class="material-icons-outlined">undo</span> Geri Al <kbd>Ctrl+Z</kbd></button>
+        <button class="dropdown-item" id="actionRedo"><span class="material-icons-outlined">redo</span> İleri Al <kbd>Ctrl+Y</kbd></button>
+        <button class="dropdown-item" id="actionSelectAll"><span class="material-icons-outlined">select_all</span> Tümünü Seç <kbd>Ctrl+A</kbd></button>
+        <button class="dropdown-item" id="actionInsertTable"><span class="material-icons-outlined">table_chart</span> Tablo</button>
+        <button class="dropdown-item" id="actionInsertImage"><span class="material-icons-outlined">image</span> Resim</button>
+        <button class="dropdown-item" id="actionInsertLink"><span class="material-icons-outlined">link</span> Bağlantı</button>
+        <button class="dropdown-item" id="actionInsertHR"><span class="material-icons-outlined">horizontal_rule</span> Yatay Çizgi</button>
+        <button class="dropdown-item" id="actionInsertPageBreak"><span class="material-icons-outlined">insert_page_break</span> Sayfa Sonu</button>
+        <button class="dropdown-item" id="actionZoomIn"><span class="material-icons-outlined">zoom_in</span> Yakınlaştır</button>
+        <button class="dropdown-item" id="actionZoomOut"><span class="material-icons-outlined">zoom_out</span> Uzaklaştır</button>
+        <button class="dropdown-item" id="actionZoomReset"><span class="material-icons-outlined">fit_screen</span> Sıfırla</button>
+        <button class="dropdown-item" id="actionToggleRuler"><span class="material-icons-outlined">straighten</span> Cetvel</button>
+        <button class="dropdown-item" id="actionToggleStatusbar"><span class="material-icons-outlined">info</span> Durum Çubuğu</button>
+        <button class="dropdown-item" id="actionSaveSystem" disabled><span class="material-icons-outlined">dns</span> Sisteme Kaydet</button>
+        <button class="dropdown-item" id="actionSaveAllAs"><span class="material-icons-outlined">move_to_inbox</span> Tümünü Farklı Kaydet</button>
+        <button class="dropdown-item" id="actionWordInfo"><span class="material-icons-outlined">info</span> Seçim Bilgisi</button>
+        <button class="dropdown-item" id="actionDocStats"><span class="material-icons-outlined">bar_chart</span> İstatistikler</button>
+        <button class="dropdown-item" id="actionShowVersion"><span class="material-icons-outlined">info_outline</span> Sürüm Bilgisi</button>
+        <button class="dropdown-item" id="actionShowHelp"><span class="material-icons-outlined">help_outline</span> Yardım</button>
+        <button class="dropdown-item" id="actionShowShortcuts"><span class="material-icons-outlined">keyboard</span> Kısayollar</button>
+        <button class="dropdown-item" id="actionClearMemory"><span class="material-icons-outlined">memory</span> Hafıza Boşalt</button>
+        <button class="dropdown-item" id="actionToggleLog"><span class="material-icons-outlined">terminal</span> Log</button>
+        <button class="dropdown-item" id="actionAddComment"><span class="material-icons-outlined">comment</span> Açıklama Ekle</button>
+        <button class="dropdown-item" id="actionExport"><span class="material-icons-outlined">vpn_key</span> Dışa Aktar</button>
+        <button class="dropdown-item" id="actionSubscript"><span class="material-icons-outlined">subscript</span> Alt Simge</button>
+        <button class="dropdown-item" id="actionSuperscript"><span class="material-icons-outlined">superscript</span> Üst Simge</button>
+        <button class="dropdown-item" id="btnPageNumber"><span class="material-icons-outlined">numbers</span> Sayfa Numarası</button>
+        <button class="dropdown-item" id="btnPageBreak"><span class="material-icons-outlined">insert_page_break</span> Sayfa Kesmesi</button>
+        <button class="dropdown-item" id="btnGoToPage"><span class="material-icons-outlined">shortcut</span> Sayfaya Git</button>
+        <button class="dropdown-item" id="btnAddHeader"><span class="material-icons-outlined">publish</span> Üst Yazı Ekle</button>
+        <button class="dropdown-item" id="btnRemoveHeader"><span class="material-icons-outlined">vertical_align_top</span> Üst Yazı Kaldır</button>
+        <button class="dropdown-item" id="btnAddFooter"><span class="material-icons-outlined">vertical_align_bottom</span> Alt Yazı Ekle</button>
+        <button class="dropdown-item" id="btnRemoveFooter"><span class="material-icons-outlined">file_download_off</span> Alt Yazı Kaldır</button>
+        <button class="dropdown-item" id="btnAddParagraph"><span class="material-icons-outlined">segment</span> Paragraf Ekle</button>
+        <button class="dropdown-item" id="btnBackgroundImg"><span class="material-icons-outlined">wallpaper</span> Arka Plan Resmi</button>
+        <button class="dropdown-item" id="btnInsertSymbol"><span class="material-icons-outlined">functions</span> Sembol Ekle</button>
+        <button class="dropdown-item" id="btnInsertBarcode"><span class="material-icons-outlined">qr_code_2</span> Barkod Ekle</button>
+        <button class="dropdown-item" id="btnInsertLinkEkle"><span class="material-icons-outlined">link</span> Köprü Ekle</button>
+        <button class="dropdown-item" id="actionClearFormatBichim" onclick="document.execCommand('removeFormat')"><span class="material-icons-outlined">format_clear</span> Biçimi Temizle</button>
+        <input type="checkbox" id="chkRuler" checked style="display:none">
+        <input type="checkbox" id="chkStatusbar" checked style="display:none">
+        <input type="checkbox" id="chkFilePanel" checked style="display:none">
+    </div>
+
+        <!-- Main Content Area: Editor + Right Panel -->
+    <main id="mainContent" class="main-content">
+        <!-- Ruler -->
+        <div id="ruler" class="ruler">
+            <div class="ruler-track" id="rulerTrack"></div>
+        </div>
+
+        <!-- Content Split -->
+        <div class="content-split" id="contentSplit">
+            <!-- Editor Wrapper (paper-like) -->
+            <div class="editor-wrapper" id="editorWrapper">
+                <!-- Pages will be injected here by PaginationManager -->
+            </div>
+
+
+
+            <!-- ===== UDF Dosya Yöneticisi — Sağ Panel ===== -->
+            <aside id="udfPanel" class="udf-panel">
+                <div class="udf-panel-header">
+                    <div class="udf-panel-title">
+                        <span class="material-icons-outlined">folder_special</span>
+                        <span>UDF Dosyaları</span>
+                    </div>
+                    <button class="udf-panel-close" id="udfPanelClose" title="Paneli Kapat">
+                        <span class="material-icons-outlined">chevron_right</span>
+                    </button>
+                </div>
+
+                <!-- Add Files Button -->
+                <div class="udf-panel-actions">
+                    <button class="udf-add-btn" id="udfAddBtn">
+                        <span class="material-icons-outlined">add_circle</span>
+                        <span>UDF Dosyası Ekle</span>
+                    </button>
+                </div>
+
+                <!-- File List -->
+                <div class="udf-file-list" id="udfFileList">
+                    <div class="udf-empty-state" id="udfEmptyState">
+                        <span class="material-icons-outlined">folder_open</span>
+                        <p>Henüz dosya eklenmedi</p>
+                        <p class="udf-empty-hint">Bilgisayarınızdan .udf dosyaları ekleyin</p>
+                    </div>
+                </div>
+
+                <!-- Panel Footer Actions -->
+                <div class="udf-panel-footer">
+                    <button class="udf-action-btn udf-save-btn" id="udfSaveActiveBtn" disabled>
+                        <span class="material-icons-outlined">save</span>
+                        <span>Kaydet</span>
+                    </button>
+                    <button class="udf-action-btn udf-sign-btn" id="udfSignActiveBtn" disabled>
+                        <span class="material-icons-outlined">draw</span>
+                        <span>İmzala &amp; Kaydet</span>
+                    </button>
+                </div>
+
+                <!-- API Support Notice -->
+                <div class="udf-api-notice" id="udfApiNotice" style="display:none;">
+                    <span class="material-icons-outlined">info</span>
+                    <span id="udfApiNoticeText"></span>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Find & Replace Panel -->
+    <div id="findReplacePanel" class="find-replace-panel hidden">
+        <div class="fr-header">
+            <span class="fr-title">Bul ve Değiştir</span>
+            <button class="fr-close" id="frClose"><span class="material-icons-outlined">close</span></button>
+        </div>
+        <div class="fr-body">
+            <div class="fr-row">
+                <div class="fr-input-wrap">
+                    <span class="material-icons-outlined">search</span>
+                    <input type="text" id="findInput" placeholder="Bul..." class="fr-input">
+                </div>
+                <button class="fr-btn" id="findPrev" title="Önceki"><span class="material-icons-outlined">expand_less</span></button>
+                <button class="fr-btn" id="findNext" title="Sonraki"><span class="material-icons-outlined">expand_more</span></button>
+                <span class="fr-count" id="findCount">0 sonuç</span>
+            </div>
+            <div class="fr-row">
+                <div class="fr-input-wrap">
+                    <span class="material-icons-outlined">find_replace</span>
+                    <input type="text" id="replaceInput" placeholder="Değiştir..." class="fr-input">
+                </div>
+                <button class="fr-btn fr-btn-accent" id="replaceOne" title="Değiştir">Değiştir</button>
+                <button class="fr-btn fr-btn-accent" id="replaceAll" title="Tümünü Değiştir">Tümünü</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Insert Dialog -->
+    <div id="tableDialog" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><span class="material-icons-outlined">table_chart</span> Tablo Ekle</h3>
+                <button class="modal-close" id="tableDialogClose"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label for="tableRows">Satır Sayısı</label>
+                    <input type="number" id="tableRows" value="3" min="1" max="50">
+                </div>
+                <div class="modal-field">
+                    <label for="tableCols">Sütun Sayısı</label>
+                    <input type="number" id="tableCols" value="3" min="1" max="20">
+                </div>
+                <div class="modal-field">
+                    <label>Önizleme</label>
+                    <div class="table-preview" id="tablePreview"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="tableDialogCancel">İptal</button>
+                <button class="btn btn-primary" id="tableDialogInsert">Ekle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link Insert Dialog -->
+    <div id="linkDialog" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><span class="material-icons-outlined">link</span> Bağlantı Ekle</h3>
+                <button class="modal-close" id="linkDialogClose"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label for="linkText">Görünen Metin</label>
+                    <input type="text" id="linkText" placeholder="Bağlantı metni...">
+                </div>
+                <div class="modal-field">
+                    <label for="linkUrl">URL</label>
+                    <input type="url" id="linkUrl" placeholder="https://...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="linkDialogCancel">İptal</button>
+                <button class="btn btn-primary" id="linkDialogInsert">Ekle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cert Viewer Dialog -->
+    <div id="certDialog" class="modal-overlay hidden"
+         onclick="if(event.target===this)this.classList.add('hidden')">
+        <div class="modal" style="width: 550px;">
+            <div class="modal-header">
+                <h3><span class="material-icons-outlined">verified_user</span>Sertifika Görüntüleyici</h3>
+                <button class="modal-close" id="certDialogClose"
+                        onclick="document.getElementById('certDialog').classList.add('hidden')"><span class="material-icons-outlined">close</span></button>
+            </div>
+            <div class="modal-body" style="font-family: 'Times New Roman', serif; font-size: 14px; line-height: 1.6; color: #000;">
+                <div style="border: 1px solid #ccc; padding: 20px; background: #fff;">
+                    <div style="text-align: center; font-weight: bold; margin-bottom: 10px; background: #e0e0e0; padding: 4px;">Sertifika Bilgileri</div>
+                    <hr style="border:none; border-top: 1px solid #333; margin-bottom: 15px;"/>
+                    
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr><td style="width: 140px; font-weight: bold; padding-bottom: 5px;">Adı</td><td style="padding-bottom: 5px;">: <span id="certSubject"></span></td></tr>
+                        <tr><td style="font-weight: bold; padding-bottom: 5px;">Sertifikayı Veren</td><td style="padding-bottom: 5px;">: <span id="certIssuer"></span></td></tr>
+                        <tr><td style="font-weight: bold; padding-bottom: 5px;">Seri No</td><td style="padding-bottom: 5px;">: <span id="certSerial"></span></td></tr>
+                        <tr><td style="font-weight: bold; padding-bottom: 5px;">Kimlik no</td><td style="padding-bottom: 5px;">: <span id="certIdentityNo"></span></td></tr>
+                        <tr><td style="font-weight: bold; padding-bottom: 5px;">Başlangıç Tarihi</td><td style="padding-bottom: 5px;">: <span id="certValidFrom"></span></td></tr>
+                        <tr><td style="font-weight: bold; padding-bottom: 5px;">Bitiş Tarihi</td><td style="padding-bottom: 5px;">: <span id="certValidTo"></span></td></tr>
+                        <tr><td style="font-weight: bold; padding-bottom: 5px;">Kullanım Alanları</td><td style="padding-bottom: 5px;">: Elektronik imza, İnkar edememezlik</td></tr>
+                        <tr><td style="font-weight: bold; padding-bottom: 5px;">Nitelikli mi?</td><td style="padding-bottom: 5px;">: Evet</td></tr>
+                    </table>
+                    
+                    <hr style="border:none; border-top: 1px solid #333; margin: 20px 0;"/>
+                    <div style="text-align: center; font-weight: bold; font-size: 16px;">Güvenlik:</div>
+                    <p style="margin-top: 10px;"><b style="font-size:15px;">Üst kök :</b> ESHS sertifikası güvenilir, imzası doğrulandı.</p>
+                    <p><b>Geçerlilik :</b> Başlatılmadı.</p>
+                    <hr style="border:none; border-top: 1px solid #333; margin-top: 20px;"/>
+                </div>
+            </div>
+            <div class="modal-footer" style="background: #e0e0e0; justify-content: flex-end;">
+                <button class="btn" id="certDialogCloseBtn"
+                        onclick="document.getElementById('certDialog').classList.add('hidden')"
+                        style="color: #000; background: #f5f5f5; border: 1px solid #999;">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <footer id="statusbar" class="statusbar">
+        <div class="statusbar-left">
+            <span id="wordCount">0 kelime</span>
+            <span class="statusbar-sep">|</span>
+            <span id="charCount">0 karakter</span>
+            <span class="statusbar-sep">|</span>
+            <span id="lineCount">1 satır</span>
+        </div>
+        <div class="statusbar-right">
+            <span id="zoomLevel">100%</span>
+            <span class="statusbar-sep">|</span>
+            <span id="docFormat">HTML</span>
+        </div>
+    </footer>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Hidden File Inputs -->
+    <input type="file" id="fileInput" accept=".html,.htm,.txt,.json,.udf" style="display:none">
+    <input type="file" id="udfMultiInput" accept=".udf" multiple style="display:none">
+    <input type="file" id="imageInput" accept="image/*" style="display:none">
+
+    <!-- Hidden Templates (dynamically moved elements) -->
+    <div id="hidden-templates" style="display:none;">
+        <div id="visualSignatureStamp" style="display:none; position:absolute; top: 60px; right: 50px; z-index:10; font-family: 'Times New Roman', serif; text-transform: uppercase; font-size: 15px; font-weight: bold; color: var(--text-primary); align-items: center; gap: 15px; user-select: none; cursor: pointer;" title="Sertifika detaylarını görmek için tıklayın" onclick="if(window.showCertDialog){window.showCertDialog();}">
+            <svg width="45" height="60" viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20,40 L10,75 L20,65 L30,75 Z" fill="#d32f2f"/>
+                <path d="M40,40 L30,75 L40,65 L50,75 Z" fill="#b71c1c"/>
+                <circle cx="30" cy="30" r="20" fill="#fbc02d" stroke="#f57f17" stroke-width="3"/>
+                <circle cx="30" cy="30" r="14" fill="#ffee58"/>
+            </svg>
+            <span id="visualSignatureName"></span>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="ArkSignerJS-3.0.2.min.js"></script>
+    <!-- PDF üretimi için -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="app.js?v=fix3" defer></script>
+    <script src="udf-manager.js?v=fix3" defer></script>
+</body>
+</html>
